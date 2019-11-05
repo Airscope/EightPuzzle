@@ -7,48 +7,44 @@ bool IDSSolver::IDS(const Board& first) {
 		camefrom_.clear();
 		closeset_.clear();
 		ClearOpenSet();
-		if (DLS(first, depth))
+		auto found_remaining = DLS(first, depth);
+		if (found_remaining.first)
 			return true;
+		else if (!found_remaining.second)
+			return false;
 	}
-	return false;
+	//return false;
 }
-
-// return found
-bool IDSSolver::DLS(const Board& board, int depth) {
+std::pair<bool, bool> IDSSolver::DLS(const Board& board, int depth) {
 	if (depth == 0) {
 		if (board.EqualsToGoal()) {
 			ReconstructPath(board);
-			return true;
+			return {true, true};
 		}
-		else 
-			return false;
+		else
+			return {false, true};
 	}
-
-	ids_openset_.push({ board, 0 });
-	bool found = false;
-	while (!ids_openset_.empty()) {
-		auto current = ids_openset_.top();
-		if (current.second > depth) {
-			ids_openset_.pop();
-			continue;
-		}
-		else if (current.first.EqualsToGoal()) {
-			ReconstructPath(current.first);
-			found = true;
-			break;
-		}
-
-		ids_openset_.pop();
-		auto neighbors = current.first.Neighbors();
+	else if (depth > 0) {
+		bool any_remaining = false;
+		auto neighbors = board.Neighbors();
+		closeset_.insert(board);
 		for (const auto& neighbor : neighbors) {
-			if (closeset_.count(neighbor) == 0) {
-				ids_openset_.push({ neighbor, current.second + 1 });
-				camefrom_[neighbor] = current.first;
+			if (closeset_.count(neighbor) != 0)
+				continue;
+
+			camefrom_[neighbor] = board;
+			auto found_remaining = DLS(neighbor, depth - 1);
+			if (found_remaining.first) {
+				// ReconstructPath(board);
+				return { true, true };
 			}
+			if (found_remaining.second)
+				any_remaining = true;
 		}
-		closeset_.insert(current.first);
+		closeset_.erase(board);
+		return { false, any_remaining };
 	}
-	return found;
 }
+
 
 } // namespace solver
