@@ -17,7 +17,7 @@ public:
 
 private:
 	bool IDS(const Board& first);
-	bool DLS(const Board& board, int depth);
+	std::pair<bool, bool> DLS(const Board& board, int depth);
 	std::stack<std::pair<Board, int>> ids_openset_;
 	void ClearOpenSet() {
 		while (!ids_openset_.empty()) {
